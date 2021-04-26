@@ -26,14 +26,24 @@ class RegressionTestHelper {
         targetFileName += '.txt'
         def referenceFile = new File(targetFileName)
         def pipelineStackWrite = System.getProperty(PIPELINE_STACK_WRITE)
-        if (pipelineStackWrite && Boolean.valueOf(pipelineStackWrite)) {
+        if (!referenceFile.isFile() || (pipelineStackWrite && Boolean.valueOf(pipelineStackWrite))) {
             writeStackToFile(referenceFile, helper)
         }
 
         String callStack = helper.callStack.join('\n') + '\n'
-        assertThat(callStack.normalize())
+        final expected = referenceFile.text.normalize()
+        final actual = callStack.normalize()
+        final actualFileName = targetFileName + ".actual"
+        final actualFile = new File(actualFileName)
+        if (actualFile.isFile()) {
+            actualFile.delete()
+        }
+        if (!expected.equals(actual)) {
+            writeStackToFile(actualFile, helper)
+        }
+        assertThat(actual)
                         .as('If you intended to update the callstack, use JVM parameter -D%s=true', PIPELINE_STACK_WRITE)
-                        .isEqualTo(referenceFile.text.normalize())
+                        .isEqualTo(expected)
     }
 
     private static writeStackToFile(File referenceFile, PipelineTestHelper helper) {
