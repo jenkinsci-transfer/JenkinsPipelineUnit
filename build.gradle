@@ -30,6 +30,26 @@ configurations {
     }
 }
 
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ['src/main/groovy']
+        }
+    }
+    test {
+        groovy {
+            srcDirs = ['src/test/groovy']
+        }
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources { 
+            srcDirs = ['src/test/jenkins', 'src/test/resources']
+        }
+    }
+}
+
+
 dependencies {
     implementation('org.codehaus.groovy:groovy-all:2.4.6')
     implementation('com.cloudbees:groovy-cps:1.12')

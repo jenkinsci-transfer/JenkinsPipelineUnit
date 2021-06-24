@@ -2,6 +2,7 @@ package com.lesfurets.jenkins.unit
 
 import static java.util.stream.Collectors.joining
 import static org.assertj.core.api.Assertions.assertThat
+import static groovy.lang.Closure.DELEGATE_ONLY
 
 import org.assertj.core.api.AbstractCharSequenceAssert
 
@@ -377,6 +378,19 @@ abstract class BasePipelineTest {
                      .collect(joining('\n'))
         }
         return cachedStackDump
+    }
+
+    /**
+     * Instantiate a Script object with given closure and run it
+     * @param Closure script content
+     * @return the return value of the script
+     */
+    Object runScript(Closure scriptRun) {
+        File file = File.createTempFile("temp",".groovy")
+        def script = loadScript(file.absolutePath)
+        def rehydrate = scriptRun.rehydrate(script, script, script)
+        rehydrate.resolveStrategy = DELEGATE_ONLY
+        rehydrate.call()
     }
 
     void printCallStack() {
