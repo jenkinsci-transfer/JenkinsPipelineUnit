@@ -524,4 +524,13 @@ class TestDeclarativePipeline extends DeclarativePipelineTest {
         assertJobStatusSuccess()
     }
 
+    @Test
+    void should_log_downstream_var() throws Exception {
+        runScript('DownstreamBuild_Jenkinsfile')
+        printCallStack()
+        assertCallStack().contains('build({job=stop, parameters=[{name=stringVarName, value=stringVarValue}, {name=secretVarName, value=***********}, {name=booleanVarName, value=true}], wait=true}')
+        assertJobStatusSuccess()
+
+    }
+
 }

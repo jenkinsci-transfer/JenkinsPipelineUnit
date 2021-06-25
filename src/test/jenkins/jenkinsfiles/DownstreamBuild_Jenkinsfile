@@ -1,0 +1,18 @@
+pipeline {
+    agent none
+    stages {
+        stage('Run subbuild') {
+            parallel {
+                stage('Build') {
+                    steps {
+                        build(job: "stop", parameters: [
+                                string(name: 'stringVarName', value: 'stringVarValue'),
+                                password(name: 'secretVarName', value: 'superSecret'),
+                                booleanParam(name: 'booleanVarName', value: 'true')
+                        ], wait: true)
+                    }
+                }
+            }
+        }
+    }
+}
