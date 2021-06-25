@@ -1,0 +1,16 @@
+def call() {
+    String upperscopeSTring = "UpperScope string with envVar: ${envVar}"
+
+    pipeline {
+        agent upperscopeSTring
+        stages {
+            stage('Echo stage') {
+                steps {
+                    echo "Upperscoped string : $upperscopeSTring"
+                }
+            }
+        }
+    }
+}
+
+call()

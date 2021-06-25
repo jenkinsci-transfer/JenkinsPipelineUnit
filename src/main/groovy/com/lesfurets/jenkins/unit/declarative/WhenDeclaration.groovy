@@ -4,9 +4,9 @@ import org.springframework.util.AntPathMatcher
 
 import java.util.regex.Pattern
 
-import static groovy.lang.Closure.DELEGATE_FIRST
+import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.executeWith
 
-class WhenDeclaration extends GenericPipelineDeclaration {
+class WhenDeclaration {
 
     AllOfDeclaration allOf
     AnyOfDeclaration anyOf
@@ -23,16 +23,19 @@ class WhenDeclaration extends GenericPipelineDeclaration {
         return Pattern.compile('^' + Pattern.quote(glob).replace('*', '\\E.*\\Q').replace('?', '\\E.\\Q') + '$')
     }
 
-    def allOf(@DelegatesTo(strategy = DELEGATE_FIRST, value = AllOfDeclaration) Closure closure) {
-        this.allOf = createComponent(AllOfDeclaration, closure)
+    def allOf(Closure closure) {
+        this.allOf = new AllOfDeclaration()
+        executeWith(this.allOf, closure, Closure.DELEGATE_FIRST)
     }
 
-    def anyOf(@DelegatesTo(strategy = DELEGATE_FIRST, value = AnyOfDeclaration) Closure closure) {
-        this.anyOf = createComponent(AnyOfDeclaration, closure)
+    def anyOf(Closure closure) {
+        this.anyOf = new AnyOfDeclaration();
+        executeWith(this.anyOf, closure, Closure.DELEGATE_FIRST);
     }
 
-    def not(@DelegatesTo(strategy = DELEGATE_FIRST, value = NotDeclaration) Closure closure) {
-        this.not = createComponent(NotDeclaration, closure)
+    def not(Closure closure) {
+        this.not = new NotDeclaration();
+        executeWith(this.not, closure, Closure.DELEGATE_FIRST)
     }
 
     def branch (String name) {
@@ -56,7 +59,7 @@ class WhenDeclaration extends GenericPipelineDeclaration {
         this.envValue = args.value as String
     }
 
-    Boolean execute(Object delegate) {
+    Boolean execute(Script script) {
         boolean expressionCheck = true
         boolean branchCheck = true
         boolean tagCheck = true
@@ -66,29 +69,29 @@ class WhenDeclaration extends GenericPipelineDeclaration {
         boolean notCheck = true
 
         if (allOf) {
-            allOfCheck = allOf.execute(delegate)
+            allOfCheck = allOf.execute(script)
         }
         if (anyOf) {
-            anyOfCheck = anyOf.execute(delegate)
+            anyOfCheck = anyOf.execute(script)
         }
         if (not) {
-            notCheck = not.execute(delegate)
+            notCheck = not.execute(script)
         }
         if (expression) {
-            expressionCheck = executeWith(delegate, expression)
+            expressionCheck = executeWith(script, expression)
         }
         if (branch) {
             AntPathMatcher antPathMatcher = new AntPathMatcher()
-            branchCheck = antPathMatcher.match(branch, delegate.env.BRANCH_NAME)
+            branchCheck = antPathMatcher.match(branch, script.env.BRANCH_NAME)
         }
         if (buildingTag) {
-            tagCheck = delegate?.env?.containsKey("TAG_NAME")
+            tagCheck = script?.env?.containsKey("TAG_NAME")
         }
         if (tag) {
-            tagCheck = delegate.env.TAG_NAME =~ tag
+            tagCheck = script.env.TAG_NAME =~ tag
         }
         if (envName != null) {
-            def val = delegate?.env[envName]
+            def val = script?.env[envName]
             envCheck = (val == envValue)
         }
 

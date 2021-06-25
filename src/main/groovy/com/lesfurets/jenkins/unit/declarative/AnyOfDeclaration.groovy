@@ -1,16 +1,14 @@
 package com.lesfurets.jenkins.unit.declarative
 
-import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.executeWith
 import org.springframework.util.AntPathMatcher
 
-import static groovy.lang.Closure.DELEGATE_FIRST
-
+import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.executeWith
 
 class AnyOfDeclaration extends WhenDeclaration {
 
     List<String> tags = []
     List<String> branches = []
-    List<Boolean> expressions = []
+    List<Closure> expressions = []
     List<AllOfDeclaration> allOfs = []
 
     def tag(String name) {
@@ -25,41 +23,35 @@ class AnyOfDeclaration extends WhenDeclaration {
         this.expressions.add(closure)
     }
 
-    def allOf(@DelegatesTo(strategy = DELEGATE_FIRST, value = AllOfDeclaration) Closure closure) {
-        this.allOfs.add(createComponent(AllOfDeclaration, closure))
+    def allOf(Closure closure) {
+        AllOfDeclaration allOfDeclaration = new AllOfDeclaration();
+        this.allOfs.add(allOfDeclaration)
+        executeWith(allOfDeclaration, closure, Closure.DELEGATE_FIRST)
     }
 
-    def allOf(Object delegate) {
-        return this.allOfs.collect {it.execute(delegate)}
-    }
-
-    def expressions(Object delegate) {
-        return this.expressions.collect {executeWith(delegate, it)}.any()
-    }
-
-    Boolean execute(Object delegate) {
+    Boolean execute(Script script) {
         def results = []
 
         AntPathMatcher antPathMatcher = new AntPathMatcher()
 
         if (this.tags.size() > 0) {
             tags.each { tag ->
-                results.add(antPathMatcher.match(tag, delegate.env.TAG_NAME))
+                results.add(antPathMatcher.match(tag, script.env.TAG_NAME))
             }
         }
 
         if (this.branches.size() > 0) {
             branches.each { branch ->
-                results.add(antPathMatcher.match(branch, delegate.env.BRANCH_NAME))
+                results.add(antPathMatcher.match(branch, script.env.BRANCH_NAME))
             }
         }
 
         if (this.expressions.size() > 0) {
-            results.add(expressions(delegate))
+            results.add(this.expressions.collect {executeWith(delegate, it)}.any())
         }
 
         if (this.allOfs.size() > 0) {
-            results.addAll(allOf(delegate))
+            results.addAll(this.allOfs.collect {it.execute(script)})
         }
 
         return results.any()

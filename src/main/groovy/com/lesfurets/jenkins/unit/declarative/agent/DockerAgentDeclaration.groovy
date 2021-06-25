@@ -1,13 +1,12 @@
 package com.lesfurets.jenkins.unit.declarative.agent
 
-import com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration
 import groovy.transform.Memoized
 import groovy.transform.ToString
 
 import static com.lesfurets.jenkins.unit.declarative.ObjectUtils.printNonNullProperties
 
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
-class DockerAgentDeclaration extends GenericPipelineDeclaration {
+class DockerAgentDeclaration {
 
     String label
     String args = ""

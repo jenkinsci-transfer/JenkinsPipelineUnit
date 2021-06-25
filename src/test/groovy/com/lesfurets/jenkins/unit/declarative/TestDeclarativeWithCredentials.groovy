@@ -6,7 +6,7 @@ import org.junit.Test
 
 import static org.junit.Assert.assertTrue
 
-class TestDeclaraticeWithCredentials extends DeclarativePipelineTest {
+class TestDeclarativeWithCredentials extends DeclarativePipelineTest {
 
     @Override
     @Before

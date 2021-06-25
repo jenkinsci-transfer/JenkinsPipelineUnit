@@ -4,10 +4,10 @@ import com.lesfurets.jenkins.unit.declarative.agent.DockerAgentDeclaration
 import com.lesfurets.jenkins.unit.declarative.agent.KubernetesAgentDeclaration
 import groovy.transform.ToString
 
-import static groovy.lang.Closure.DELEGATE_FIRST
+import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.executeWith
 
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
-class AgentDeclaration extends GenericPipelineDeclaration {
+class AgentDeclaration {
 
     String label
     DockerAgentDeclaration docker
@@ -16,13 +16,12 @@ class AgentDeclaration extends GenericPipelineDeclaration {
     String dockerfileDir
     Boolean reuseNode = null
     String customWorkspace
-    def binding = null
 
     def label(String label) {
         this.label = label
     }
 
-    def node(@DelegatesTo(AgentDeclaration) Closure closure) {
+    def node(Closure closure) {
         closure.call()
     }
 
@@ -35,26 +34,29 @@ class AgentDeclaration extends GenericPipelineDeclaration {
     }
 
     def docker(String image) {
-        this.docker = new DockerAgentDeclaration().with { it.image = image; it }
+        this.docker = new DockerAgentDeclaration().with{  da -> da.image = image; da }
     }
 
-    def docker(@DelegatesTo(strategy = DELEGATE_FIRST, value = DockerAgentDeclaration) Closure closure) {
-        this.docker = createComponent(DockerAgentDeclaration, closure)
+    def docker(Closure closure) {
+        this.docker = new DockerAgentDeclaration();
+        executeWith(this.docker, closure);
     }
 
     def kubernetes(Object kubernetesAgent) {
         this.@kubernetes = kubernetesAgent as KubernetesAgentDeclaration
     }
 
-    def kubernetes(@DelegatesTo(strategy = DELEGATE_FIRST, value = KubernetesAgentDeclaration) Closure closure) {
-        this.@kubernetes = createComponent(KubernetesAgentDeclaration, closure)
+    def kubernetes(Closure closure) {
+        this.@kubernetes = new KubernetesAgentDeclaration();
+        def kubernetesDecl = this.@kubernetes
+        executeWith(kubernetesDecl, closure, Closure.DELEGATE_FIRST)
     }
 
     def dockerfile(boolean dockerfile) {
         this.dockerfile = dockerfile
     }
 
-    def dockerfile(@DelegatesTo(AgentDeclaration) Closure closure) {
+    def dockerfile(Closure closure) {
         closure.call()
     }
 
@@ -62,19 +64,7 @@ class AgentDeclaration extends GenericPipelineDeclaration {
         this.dockerfileDir = dir
     }
 
-    def getCurrentBuild() {
-        return binding?.currentBuild
-    }
-
-    def getEnv() {
-        return binding?.env
-    }
-
-    def getParams() {
-        return binding?.params
-    }
-
-    def execute(Object delegate) {
+    def execute(Script script) {
         def agentDesc = null
 
         if (label) {
@@ -95,6 +85,6 @@ class AgentDeclaration extends GenericPipelineDeclaration {
         else {
             throw new IllegalStateException("No agent description found")
         }
-        executeWith(delegate, { echo "Executing on agent $agentDesc" })
+        executeWith(script, { echo "Executing on agent $agentDesc" })
     }
 }

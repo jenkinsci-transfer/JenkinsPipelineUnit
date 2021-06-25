@@ -11,6 +11,7 @@ pipeline {
             }
             steps {
                 echo "LEVAR1 ${env.LEVAR1}"
+                echo "LEVAR1 ${LEVAR1} without pefixing env"
                 echo "LEVAR2 ${env.LEVAR2}"
             }
         }

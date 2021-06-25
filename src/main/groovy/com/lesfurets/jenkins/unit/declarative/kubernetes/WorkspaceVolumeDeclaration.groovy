@@ -5,10 +5,9 @@ import groovy.transform.Memoized
 import groovy.transform.ToString
 
 import static com.lesfurets.jenkins.unit.declarative.ObjectUtils.printNonNullProperties
-import static groovy.lang.Closure.DELEGATE_FIRST
 
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
-class WorkspaceVolumeDeclaration extends GenericPipelineDeclaration {
+class WorkspaceVolumeDeclaration {
 
     DynamicWorkspaceVolume dynamicPVC
     EmptyDirWorkspaceVolume emptyDirWorkspaceVolume
@@ -16,24 +15,31 @@ class WorkspaceVolumeDeclaration extends GenericPipelineDeclaration {
     NfsWorkspaceVolume nfsWorkspaceVolume
     PersistentVolumeClaimWorkspaceVolume persistentVolumeClaimWorkspaceVolume
 
-    void dynamicPVC(@DelegatesTo(strategy = DELEGATE_FIRST, value = DynamicWorkspaceVolume) Closure closure) {
-        this.dynamicPVC = createComponent(DynamicWorkspaceVolume, closure)
+    void dynamicPVC(Closure closure) {
+        this.dynamicPVC = new DynamicWorkspaceVolume();
+        GenericPipelineDeclaration.executeWith(this.dynamicPVC, closure);
     }
 
-    void emptyDirWorkspaceVolume(@DelegatesTo(strategy = DELEGATE_FIRST, value = EmptyDirWorkspaceVolume) Closure closure) {
-        this.emptyDirWorkspaceVolume = createComponent(EmptyDirWorkspaceVolume, closure)
+    void emptyDirWorkspaceVolume(Closure closure) {
+        this.emptyDirWorkspaceVolume = new EmptyDirWorkspaceVolume();
+        closure.delegate= this.emptyDirWorkspaceVolume;
+        closure.call();
     }
 
-    void hostPathWorkspaceVolume(@DelegatesTo(strategy = DELEGATE_FIRST, value = HostPathWorkspaceVolume) Closure closure) {
-        this.hostPathWorkspaceVolume = createComponent(HostPathWorkspaceVolume, closure)
+    void hostPathWorkspaceVolume(Closure closure) {
+        this.hostPathWorkspaceVolume = new HostPathWorkspaceVolume();
+        GenericPipelineDeclaration.executeWith(this.hostPathWorkspaceVolume, closure);
+
     }
 
-    void nfsWorkspaceVolume(@DelegatesTo(strategy = DELEGATE_FIRST, value = NfsWorkspaceVolume) Closure closure) {
-        nfsWorkspaceVolume = createComponent(NfsWorkspaceVolume, closure)
+    void nfsWorkspaceVolume(Closure closure) {
+        nfsWorkspaceVolume = new NfsWorkspaceVolume();
+        GenericPipelineDeclaration.executeWith(this.nfsWorkspaceVolume, closure);
     }
 
-    void persistentVolumeClaimWorkspaceVolume(@DelegatesTo(strategy = DELEGATE_FIRST, value = PersistentVolumeClaimWorkspaceVolume) Closure closure) {
-        persistentVolumeClaimWorkspaceVolume = createComponent(PersistentVolumeClaimWorkspaceVolume, closure)
+    void persistentVolumeClaimWorkspaceVolume(Closure closure) {
+        persistentVolumeClaimWorkspaceVolume = new PersistentVolumeClaimWorkspaceVolume();
+        GenericPipelineDeclaration.executeWith(this.persistentVolumeClaimWorkspaceVolume, closure);
     }
 
     @Memoized

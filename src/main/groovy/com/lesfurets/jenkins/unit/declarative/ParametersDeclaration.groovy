@@ -1,12 +1,15 @@
 package com.lesfurets.jenkins.unit.declarative
 
 
-class ParametersDeclaration extends GenericPipelineDeclaration {
+class ParametersDeclaration {
+    Binding binding
 
-    void setParams(String key, Object val) {
-        Map params = this.params
-        if (params != null && (!params.containsKey(key))) {
-            params[key] = val
+    void setParams(String key, Object defaultValue) {
+        if (!binding.hasVariable("params")) {
+            binding.setVariable("params", [:])
+        }
+        if (!binding.params.containsKey(key)) {
+            binding.params[key] = defaultValue
         }
     }
 

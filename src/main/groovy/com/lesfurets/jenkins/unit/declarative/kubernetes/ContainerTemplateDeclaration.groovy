@@ -4,12 +4,11 @@ import com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration
 import groovy.transform.Memoized
 import groovy.transform.ToString
 
-import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.createComponent
+import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.executeWith
 import static com.lesfurets.jenkins.unit.declarative.ObjectUtils.printNonNullProperties
-import static groovy.lang.Closure.DELEGATE_FIRST
 
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
-class ContainerTemplateDeclaration extends GenericPipelineDeclaration {
+class ContainerTemplateDeclaration {
 
     String name;
     String image;
@@ -90,14 +89,17 @@ class ContainerTemplateDeclaration extends GenericPipelineDeclaration {
         this.shell = shell
     }
 
-    def ports(@DelegatesTo(strategy = DELEGATE_FIRST, value = PortMappingDeclaration) List<Closure> closures) {
+    def ports(List<Closure> closures) {
         this.ports = closures.each { ct ->
-            return createComponent(PortMappingDeclaration, ct)
+            def portMappingDeclaration = new PortMappingDeclaration()
+            executeWith(portMappingDeclaration, closure)
+            return portMappingDeclaration
         } as List<PortMappingDeclaration>
     }
 
-    def livenessProbe(@DelegatesTo(strategy = DELEGATE_FIRST, value = ContainerLivenessProbeDeclaration) Closure closure) {
-        this.livenessProbe = createComponent(ContainerLivenessProbeDeclaration, ct)
+    def livenessProbe(Closure closure) {
+        this.livenessProbe = new ContainerLivenessProbeDeclaration();
+        executeWith(this.livenessProbe, closure)
     }
 
     @Memoized

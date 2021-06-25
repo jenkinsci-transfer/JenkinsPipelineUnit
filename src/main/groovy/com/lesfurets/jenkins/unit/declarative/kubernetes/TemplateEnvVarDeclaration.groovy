@@ -1,8 +1,6 @@
 package com.lesfurets.jenkins.unit.declarative.kubernetes
 
-import com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration
-
-class TemplateEnvVarDeclaration extends GenericPipelineDeclaration {
+class TemplateEnvVarDeclaration {
 
     KeyValueVar containerEnvVar;
     KeyValueVar envVar;

@@ -1,0 +1,50 @@
+pipeline {
+
+    agent any
+
+    environment {
+        CC = testThis(this, 'gcc')
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: testThis(this, '10')))
+    }
+
+    triggers {
+        pollSCM(testThis(this, '*/5 * * * *'))
+    }
+
+    stages {
+        stage('Checkout') {
+            when {
+                environment name: 'CC', value: testThis(this, 'clang')
+            }
+            steps {
+                echo testThis(this, "Steps")
+            }
+        }
+
+        stage('build') {
+            agent { docker testThis(this, 'maven:3-alpine') }
+            options {
+                timeout(time: 20, unit: 'MINUTES')
+            }
+            steps {
+                withEnv(["GRADLE_HOME=${tool name: 'GRADLE_3', type: 'hudson.plugins.gradle.GradleInstallation'}"]) {
+                    echo testThis(this, "In env")
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo testThis(this, 'pipeline unit tests completed')
+        }
+
+    }
+}
+
+String testThis(Script scriptRef, String text){
+    return "$text: This is a script?: ${scriptRef instanceof Script}"
+}

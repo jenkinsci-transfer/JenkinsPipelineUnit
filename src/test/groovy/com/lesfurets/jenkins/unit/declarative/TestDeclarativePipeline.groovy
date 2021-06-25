@@ -453,8 +453,17 @@ class TestDeclarativePipeline extends DeclarativePipelineTest {
         runScript('Environment_Jenkinsfile')
         printCallStack()
         assertCallStack().contains('echo(LEVAR1 LE NEW VALUE)')
+        assertCallStack().contains('echo(LEVAR1 LE NEW VALUE without pefixing env)')
         assertCallStack().contains('echo(LEVAR2 A COPY OF LE NEW VALUE in build#1)')
         assertJobStatusSuccess()
+    }
+
+    @Test void should_be_able_to_access_upper_score_var() throws Exception {
+        String envVarValue = "envVarValue"
+        addEnvVar("envVar", envVarValue)
+        runScript('Scoping_Jenkinsfile')
+        assertCallStack().contains("echo(Upperscoped string : UpperScope string with envVar: $envVarValue)")
+        printCallStack()
     }
 
     @Test void not_running_stage_after_failure() throws Exception {
@@ -493,8 +502,7 @@ class TestDeclarativePipeline extends DeclarativePipelineTest {
     }
 
     @Test void agent_with_mock_param_label() throws Exception {
-        def params = binding.getVariable('params')
-        params['AGENT'] = 'mockSlave'
+        addParam('AGENT', 'mockSlave')
         runScript('AgentParam_Jenkinsfile')
         printCallStack()
         assertCallStack().contains('mockSlave')
@@ -524,4 +532,11 @@ class TestDeclarativePipeline extends DeclarativePipelineTest {
         assertJobStatusSuccess()
     }
 
+    @Test void jenkinsfile_thisObject() throws Exception {
+        def script = runScript('Declarative_thisObject_JenkinsFile')
+        printCallStack()
+        assertJobStatusSuccess()
+        assertCallStack().doesNotContain("This is a script?: false")
+        assertCallStack().contains("This is a script?: true")
+    }
 }

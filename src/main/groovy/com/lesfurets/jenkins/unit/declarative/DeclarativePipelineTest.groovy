@@ -8,15 +8,18 @@ import static com.lesfurets.jenkins.unit.MethodSignature.method
 abstract class DeclarativePipelineTest extends BasePipelineTest {
 
     def pipelineInterceptor = { Closure closure ->
-        GenericPipelineDeclaration.binding = binding
-        GenericPipelineDeclaration.createComponent(DeclarativePipeline, closure).execute(delegate)
+        def declarativePipeline = new DeclarativePipeline()
+        def rehydratedPipelineCl = closure.rehydrate(declarativePipeline, closure.owner, closure)
+        rehydratedPipelineCl.resolveStrategy
+        rehydratedPipelineCl.call();
+        declarativePipeline.execute(closure.owner)
     }
 
     def paramInterceptor = { Map desc ->
         addParam(desc.name, desc.defaultValue, false)
     }
 
-    def stringInterceptor = { Map desc->
+    def stringInterceptor = { Map desc ->
         if (desc) {
             // we are in context of parameters { string(...)}
             if (desc.name) {

@@ -6,25 +6,24 @@ import com.lesfurets.jenkins.unit.declarative.kubernetes.WorkspaceVolumeDeclarat
 import groovy.transform.Memoized
 import groovy.transform.ToString
 
-import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.createComponent
+import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.executeWith
 import static com.lesfurets.jenkins.unit.declarative.ObjectUtils.printNonNullProperties
-import static groovy.lang.Closure.DELEGATE_FIRST
 
 @ToString(includePackage = false, includeNames = true, ignoreNulls = true)
-class KubernetesAgentDeclaration extends GenericPipelineDeclaration {
+class KubernetesAgentDeclaration {
 
     String label;
     String customWorkspace;
     String cloud;
     String inheritFrom;
-    int idleMinutes;
-    int instanceCap;
+    Integer idleMinutes;
+    Integer instanceCap;
     String serviceAccount;
     String nodeSelector;
     String namespace;
     String workingDir;
-    int activeDeadlineSeconds;
-    int slaveConnectTimeout;
+    Integer activeDeadlineSeconds;
+    Integer slaveConnectTimeout;
     String podRetention;
     ContainerTemplateDeclaration containerTemplate;
     List<ContainerTemplateDeclaration> containerTemplates;
@@ -87,13 +86,16 @@ class KubernetesAgentDeclaration extends GenericPipelineDeclaration {
         this.podRetention = podRetention
     }
 
-    def containerTemplate(@DelegatesTo(strategy = DELEGATE_FIRST, value = ContainerTemplateDeclaration) Closure closure) {
-        this.containerTemplate = createComponent(ContainerTemplateDeclaration, closure)
+    def containerTemplate(Closure closure) {
+        this.containerTemplate = new ContainerTemplateDeclaration();
+        executeWith(this.containerTemplate, closure)
     }
 
-    def containerTemplates(@DelegatesTo(strategy = DELEGATE_FIRST, value = ContainerTemplateDeclaration) List<Closure> closures) {
-        this.containerTemplates = closures.each { ct ->
-            return createComponent(ContainerTemplateDeclaration, ct)
+    def containerTemplates(List<Closure> closures) {
+        this.containerTemplates = closures.collect { ctClosure ->
+            def containerTemplateDeclaration = new ContainerTemplateDeclaration();
+            executeWith(containerTemplateDeclaration, ctClosure)
+            return containerTemplateDeclaration;
         } as List<ContainerTemplateDeclaration>
     }
 
@@ -113,8 +115,9 @@ class KubernetesAgentDeclaration extends GenericPipelineDeclaration {
         this.yamlMergeStrategy = yamlMergeStrategy
     }
 
-    def workspaceVolume(@DelegatesTo(strategy = DELEGATE_FIRST, value = WorkspaceVolumeDeclaration) Closure closure) {
-        this.workspaceVolume = createComponent(WorkspaceVolumeDeclaration, closure)
+    def workspaceVolume(Closure closure) {
+        this.workspaceVolume = new WorkspaceVolumeDeclaration();
+        executeWith(this.workspaceVolume, closure)
     }
 
     def supplementalGroups(final String supplementalGroups) {

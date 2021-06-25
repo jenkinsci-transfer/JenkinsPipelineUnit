@@ -2,12 +2,12 @@ package com.lesfurets.jenkins.unit.declarative
 
 import org.springframework.util.AntPathMatcher
 
-import static groovy.lang.Closure.DELEGATE_FIRST
+import static com.lesfurets.jenkins.unit.declarative.GenericPipelineDeclaration.executeWith
 
 class AllOfDeclaration extends WhenDeclaration {
 
     List<String> branches = []
-    List<Boolean> expressions = []
+    List<Closure> expressions = []
     List<AnyOfDeclaration> anyOfs = []
 
     def branch(String name) {
@@ -18,35 +18,29 @@ class AllOfDeclaration extends WhenDeclaration {
         this.expressions.add(closure)
     }
 
-    def anyOf(@DelegatesTo(strategy = DELEGATE_FIRST, value = AnyOfDeclaration) Closure closure) {
-        this.anyOfs.add(createComponent(AnyOfDeclaration, closure))
+    def anyOf(Closure closure) {
+        AnyOfDeclaration anyOfDeclaration = new AnyOfDeclaration();
+        this.anyOfs.add(anyOfDeclaration)
+        executeWith(anyOfDeclaration, closure, Closure.DELEGATE_FIRST)
     }
 
-    def expressions(Object delegate) {
-        return this.expressions.collect {executeWith(delegate, it)}.every()
-    }
-
-    def anyOf(Object delegate) {
-        return this.anyOfs.collect {it.execute(delegate)}
-    }
-
-    Boolean execute(Object delegate) {
-        def results = []
+    Boolean execute(Script script) {
+        List<Boolean> results = []
 
         AntPathMatcher antPathMatcher = new AntPathMatcher()
 
         if (this.branches.size() > 0) {
             branches.each { branch ->
-                results.add(antPathMatcher.match(branch, delegate.env.BRANCH_NAME))
+                results.add(antPathMatcher.match(branch, script.env.BRANCH_NAME))
             }
         }
 
         if (this.expressions.size() > 0) {
-            results.add(expressions(delegate))
+            results.add(this.expressions.collect { executeWith(script, it) }.every())
         }
 
         if (this.anyOfs.size() > 0) {
-            results.addAll(anyOf(delegate))
+            results.addAll(this.anyOfs.collect {it.execute(script)})
         }
 
         return results.every()

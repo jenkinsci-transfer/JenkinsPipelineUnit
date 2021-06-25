@@ -11,7 +11,8 @@ class InterceptingGCL extends GroovyClassLoader {
         metaClazz.invokeMethod = helper.getMethodInterceptor()
         metaClazz.static.invokeMethod = helper.getMethodInterceptor()
         metaClazz.methodMissing = helper.getMethodMissingInterceptor()
-        metaClazz.getEnv = {return binding.env}
+        metaClazz.propertyMissing = helper.getPropertyMissingInterceptor()
+        metaClazz.getEnv = { return binding.env }
         // find and replace script method closure with any matching allowed method closure
         metaClazz.methods.forEach { scriptMethod ->
             def signature = method(scriptMethod.name, scriptMethod.nativeParameterTypes)
@@ -66,10 +67,7 @@ class InterceptingGCL extends GroovyClassLoader {
             return super.loadClass(name)
         }
 
-        // Copy from this.parseClass(GroovyCodeSource, boolean)
-        cls.metaClass.invokeMethod = helper.getMethodInterceptor()
-        cls.metaClass.static.invokeMethod = helper.getMethodInterceptor()
-        cls.metaClass.methodMissing = helper.getMethodMissingInterceptor()
+        interceptClassMethods(cls.metaClass, helper, binding)
 
         return cls;
     }
