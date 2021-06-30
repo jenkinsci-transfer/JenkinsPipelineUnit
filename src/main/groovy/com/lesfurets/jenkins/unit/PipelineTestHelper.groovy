@@ -407,6 +407,32 @@ class PipelineTestHelper {
     }
 
     /**
+     * Load the script code with empty binding, returning the Script
+     * @param scriptText code for the script
+     * @return Script object
+     */
+    Script loadInlineScript(String scriptText) {
+        return this.loadInlineScript(scriptText, new Binding())
+    }
+
+    /**
+     * Load the script code with given binding context without running, return the Script
+     * @param scriptText
+     * @param binding
+     * @return Script object
+     */
+    Script loadInlineScript(String scriptText, Binding binding) {
+        Objects.requireNonNull(binding, "Binding cannot be null.")
+        Objects.requireNonNull(helper.gse, "GroovyScriptEngine is not initialized: Initialize the helper by calling init().")
+        GroovyShell shell = new GroovyShell(helper.gse.getParentClassLoader(), binding, helper.gse.getConfig())
+        Script script = shell.parse(scriptText)
+        // make sure to set global vars after parsing the script as it will trigger library loads, otherwise library methods will be unregistered
+        helper.setGlobalVars(binding)
+        InterceptingGCL.interceptClassMethods(script.metaClass, helper, binding)
+        return script
+    }
+
+    /**
      * Load and run the script, returning the result value;
      * @param scriptName
      * @param binding
@@ -423,6 +449,25 @@ class PipelineTestHelper {
      */
     Object runScript(String scriptName) {
         return runScriptInternal(loadScript(scriptName, new Binding()))
+    }
+
+    /**
+     * Load and run the script, returning the result value;
+     * @param scriptText
+     * @param binding
+     * @return the return value of the script
+     */
+    Script runInlineScript(String scriptText, Binding binding) {
+        return runScriptInternal(loadInlineScript(scriptText, binding))
+    }
+
+    /**
+     * Load and run the script, returning the result value;
+     * @param scriptText
+     * @return the return value of the script
+     */
+    Script runInlineScript(String scriptText) {
+        return runScriptInternal(loadInlineScript(scriptText, new Binding()))
     }
 
     /**

@@ -333,6 +333,18 @@ abstract class BasePipelineTest {
     }
 
     /**
+     * Loads without running the script from its code, returning the Script
+     * @param scriptText script code
+     * @return script object
+     */
+    Script loadInlineScript(String scriptText) {
+        if (!helper.isInitialized()) {
+            throw new IllegalStateException("Helper is not initialized: Call setUp() before tests.")
+        }
+        return helper.loadInlineScript(scriptText, this.binding)
+    }
+
+    /**
      * Loads and runs the script by its name/path
      * @param scriptName script name or path
      * @return the return value of the script
@@ -342,6 +354,18 @@ abstract class BasePipelineTest {
             throw new IllegalStateException("Helper is not initialized: Call setUp() before tests.")
         }
         return helper.runScript(scriptName, this.binding)
+    }
+
+    /**
+     * Loads and runs the script from its code
+     * @param scriptText script name or path
+     * @return the return value of the script
+     */
+    Object runInlineScript(String scriptText) {
+        if (!helper.isInitialized()) {
+            throw new IllegalStateException("Helper is not initialized: Call setUp() before tests.")
+        }
+        return helper.runInlineScript(scriptText, this.binding)
     }
 
     /**

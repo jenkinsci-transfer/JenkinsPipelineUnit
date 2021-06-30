@@ -219,7 +219,7 @@ The `sh` step is used by many pipelines for a variety of tasks. It can be mocked
 
 - A string for standard output
 - A return code
-  
+
 ..., or (b) execute a closure that will be executed when `sh` is called before returning a `Map` (with `stdout` and
 `exitValue` entries) allowing for dynamic behaviour.
 
@@ -383,7 +383,7 @@ You then can go ahead and commit this change in your SCM to check in the change.
 ### Preserve original callstack argument references
 The default behavior of the callstack capture is to clone each call's arguments
 to preserve their values at time of the call should those arguments mutate
-downstream. That is a good guard when your scripts are passing ordinary mutable 
+downstream. That is a good guard when your scripts are passing ordinary mutable
 variables as arguments.
 
 However, argument types that are not `Cloneable` are captured as `String`
@@ -416,13 +416,38 @@ assertEquals(arg.aNestedMap.bb, 2)
 ```
 
 If you want to perform this kind of validation--particularly if your pipelines
-pass `final` and/or immutable variables as arguments--you can retain the 
-direct reference to the variable in the callstack by setting this switch 
+pass `final` and/or immutable variables as arguments--you can retain the
+direct reference to the variable in the callstack by setting this switch
 in your test setup.
 
 ```groovy
        helper.cloneArgsOnMethodCallRegistration = false
 ```
+
+### Run script inline
+
+In case you want to have some script executed directly within a test case rather
+than creating a resource file for it, `loadInlineScript` and `runInlineScript` can be used.
+
+```groovy
+    @Test
+    void testSomeScript() throws Exception {
+        def script = loadInlineScript('''
+            node {
+                stage('Build') {
+                    sh 'make'
+                }
+            }
+        ''')
+
+        script.execute()
+
+        printCallStack()
+        assertJobStatusSuccess()
+    }
+```
+
+Note that inline scripts cannot be debugged via breakpoints as there is no backing files to attach to!
 
 ## Configuration
 
